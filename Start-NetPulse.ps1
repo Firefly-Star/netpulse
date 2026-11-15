@@ -43,4 +43,11 @@ if (-not $Elevated -and -not $SelfTest -and -not (Test-Admin)) {
     }
 }
 
-& (Join-Path $here 'NetPulse.UI.ps1') @PSBoundParameters
+# 只转发 UI 认识的参数。@PSBoundParameters 会把 -Elevated 也带进去，
+# 而 NetPulse.UI.ps1 没有这个参数，会直接报参数绑定失败、窗口根本起不来。
+$forward = @{}
+if ($NoTopMost) { $forward['NoTopMost'] = $true }
+if ($Expanded)  { $forward['Expanded']  = $true }
+if ($SelfTest)  { $forward['SelfTest']  = $true }
+
+& (Join-Path $here 'NetPulse.UI.ps1') @forward
