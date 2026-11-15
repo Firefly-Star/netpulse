@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>NetPulse · D 展开态</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #14171d;
+    background-image:
+      radial-gradient(900px 500px at 12% -8%, rgba(59,130,246,.10), transparent 60%),
+      radial-gradient(700px 500px at 92% 108%, rgba(16,185,129,.09), transparent 60%);
+    font-family: 'Segoe UI Variable Text', 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft YaHei', sans-serif;
+    padding: 40px; color: #e6edf3; -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'Cascadia Mono','Consolas',monospace; }
+  .page-title { font-size: 13px; letter-spacing: .18em; color: #6b7280; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
+  .page-sub { font-size: 12px; color: #4b5563; margin-bottom: 32px; }
+  .grid { display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap; }
+  .item { display: flex; flex-direction: column; gap: 12px; }
+  .tag { font-size: 11px; color: #6b7280; letter-spacing: .06em; font-weight: 600; }
+  .tag b { color: #9ca3af; }
+  .desc { font-size: 11px; color: #4b5563; line-height: 1.65; max-width: 340px; }
+
+  /* ============ 玻璃外壳（共用） ============ */
+  .wrap { padding: 1.5px; border-radius: 18px;
+    background: linear-gradient(145deg, rgba(122,162,255,.55), rgba(150,120,255,.18) 38%, rgba(72,222,178,.45));
+    box-shadow: 0 24px 64px rgba(0,0,0,.6), 0 2px 10px rgba(0,0,0,.3); }
+  .glass { border-radius: 16.5px; position: relative; overflow: hidden;
+    background: linear-gradient(168deg, #191e28 0%, #12151c 52%, #151a23 100%); }
+  .glow { position: absolute; border-radius: 50%; filter: blur(58px); pointer-events: none; }
+  .g1 { width: 200px; height: 200px; background: #3b82f6; opacity: .28; top: -110px; right: -70px; }
+  .g2 { width: 210px; height: 210px; background: #10b981; opacity: .20; bottom: -130px; left: -80px; }
+  .inner { position: relative; padding: 16px 17px 14px; }
+
+  /* 顶栏 */
+  .hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .brand { font-size: 10.5px; color: #7d8a9c; letter-spacing: .13em; font-weight: 600; }
+  .state { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: #6ee7a8; font-weight: 600; }
+  .state .ico { width: 9px; height: 9px; }
+
+  /* 大数字 */
+  .big { display: flex; gap: 22px; }
+  .col .k { font-size: 9px; color: #626e80; letter-spacing: .11em; font-weight: 700; margin-bottom: 4px; }
+  .col .v { font-size: 28px; font-weight: 300; letter-spacing: -.02em; color: #f1f5f9; line-height: 1; }
+  .col .v i { font-size: 10px; color: #5b6678; font-style: normal; font-weight: 500; margin-left: 3px; }
+  .col .v.dim { color: #93a2b5; }
+
+  /* 图表 */
+  .chart { margin: 14px -17px 0; display: block; }
+
+  /* 收起态底栏 */
+  .foot { display: flex; justify-content: space-between; margin-top: 12px;
+    border-top: 1px solid rgba(255,255,255,.065); padding-top: 11px; }
+  .fm .k { font-size: 8.5px; color: #556072; letter-spacing: .1em; font-weight: 700; }
+  .fm .v { font-size: 12.5px; color: #b8c4d4; margin-top: 2px; }
+
+  /* ============ 展开态 ============ */
+  .sec { margin-top: 15px; }
+  .sec:first-child { margin-top: 0; }
+  .sec-hd { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+  .sec-hd .t { font-size: 8.5px; color: #556072; letter-spacing: .12em; font-weight: 700; }
+  .sec-hd .line { flex: 1; height: 1px; background: rgba(255,255,255,.06); }
+
+  .row { display: grid; align-items: center; font-size: 11px; padding: 3.5px 0; }
+  .row .n { color: #b3bfd0; display: flex; align-items: center; gap: 6px; }
+  .row .r { text-align: right; font-family: 'Cascadia Mono',monospace; font-size: 10.5px; color: #7e8b9d; }
+  .row.hd { font-size: 8.5px; color: #4d5766; letter-spacing: .08em; font-weight: 700; padding-bottom: 3px; }
+  .dot { width: 5px; height: 5px; border-radius: 50%; flex: none; }
+  .ok { color: #6ee7a8 !important; } .warn { color: #f0b429 !important; } .bad { color: #ff7b72 !important; }
+
+  /* 四栏指标条 */
+  .quad { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 10px; }
+  .q { background: rgba(255,255,255,.028); border-radius: 7px; padding: 7px 9px;
+       border: 1px solid rgba(255,255,255,.045); }
+  .q .k { font-size: 8px; color: #556072; letter-spacing: .1em; font-weight: 700; }
+  .q .v { font-size: 14px; color: #dbe4ee; margin-top: 2px; font-weight: 400; }
+  .q .v small { font-size: 9px; color: #63707f; font-weight: 500; }
+
+  /* 出口链路条 */
+  .route { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: #8fa0b5; flex-wrap: wrap; }
+  .node { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.06);
+          padding: 3px 8px; border-radius: 6px; font-size: 10px; }
+  .node.tun { border-color: rgba(110,231,168,.4); color: #6ee7a8; background: rgba(110,231,168,.08); }
+  .arrow { color: #3f4854; font-size: 10px; }
+</style>
+</head>
+<body>
+
+<div class="page-title">NetPulse · D 方向 · 收起 / 展开</div>
+<div class="page-sub">玻璃拟态；收起态 316×~200，展开态同宽向下生长，信息分区用小标题 + 细分隔线</div>
+
+<div class="grid">
+
+  <!-- ============ 收起态 ============ -->
+  <div class="item">
+    <div class="tag">① <b>收起态</b> · 平时挂桌面</div>
+    <div class="wrap">
+      <div class="glass">
+        <div class="glow g1"></div><div class="glow g2"></div>
+        <div class="inner">
+          <div class="hd">
+            <div class="brand">NETPULSE</div>
+            <div class="state">
+              <svg class="ico" viewBox="0 0 9 9"><circle cx="4.5" cy="4.5" r="3.9" fill="none" stroke="#6ee7a8" stroke-width="1.5"/><circle cx="4.5" cy="4.5" r="1.7" fill="#6ee7a8"/></svg>
+              链路正常
+            </div>
+          </div>
+          <div class="big">
+            <div class="col"><div class="k">DOWN</div><div class="v mono">1.24<i>MB/s</i></div></div>
+            <div class="col"><div class="k">UP</div><div class="v dim mono">86<i>KB/s</i></div></div>
+          </div>
+          <svg class="chart" viewBox="0 0 316 52" preserveAspectRatio="none" width="316" height="52">
+            <defs>
+              <linearGradient id="c1" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#10b981" stop-opacity=".34"/>
+                <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,40 L16,34 L32,38 L48,25 L64,31 L80,19 L96,27 L112,14 L128,23 L144,11 L160,19 L176,8 L192,16 L208,13 L224,24 L240,18 L256,28 L272,21 L288,30 L300,25 L316,31 L316,52 L0,52 Z" fill="url(#c1)"/>
+            <path d="M0,40 L16,34 L32,38 L48,25 L64,31 L80,19 L96,27 L112,14 L128,23 L144,11 L160,19 L176,8 L192,16 L208,13 L224,24 L240,18 L256,28 L272,21 L288,30 L300,25 L316,31" fill="none" stroke="#34d399" stroke-width="1.6" stroke-linejoin="round"/>
+          </svg>
+          <div class="foot">
+            <div class="fm"><div class="k">RTT</div><div class="v mono">55 ms</div></div>
+            <div class="fm"><div class="k">抖动</div><div class="v mono">8.9 ms</div></div>
+            <div class="fm"><div class="k">丢包</div><div class="v mono">0%</div></div>
+            <div class="fm"><div class="k">出口</div><div class="v">WLAN</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="desc">保留 D 的全部气质：渐变细描边、双色光晕、超细大数字。四项指标压在一行，宽度不变。</div>
+  </div>
+
+  <!-- ============ 展开态 ============ -->
+  <div class="item">
+    <div class="tag">② <b>展开态</b> · 双击或点箭头</div>
+    <div class="wrap">
+      <div class="glass">
+        <div class="glow g1"></div><div class="glow g2"></div>
+        <div class="inner">
+
+          <div class="hd">
+            <div class="brand">NETPULSE</div>
+            <div class="state">
+              <svg class="ico" viewBox="0 0 9 9"><circle cx="4.5" cy="4.5" r="3.9" fill="none" stroke="#6ee7a8" stroke-width="1.5"/><circle cx="4.5" cy="4.5" r="1.7" fill="#6ee7a8"/></svg>
+              链路正常
+              <span style="color:#556072;margin-left:4px;font-size:12px;line-height:1">︿</span>
+            </div>
+          </div>
+
+          <div class="big">
+            <div class="col"><div class="k">DOWN</div><div class="v mono">1.24<i>MB/s</i></div></div>
+            <div class="col"><div class="k">UP</div><div class="v dim mono">86<i>KB/s</i></div></div>
+          </div>
+
+          <!-- 双轨图：吞吐面积 + RTT 折线 -->
+          <svg class="chart" viewBox="0 0 316 62" preserveAspectRatio="none" width="316" height="62">
+            <defs>
+              <linearGradient id="c2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#10b981" stop-opacity=".30"/>
+                <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,48 L16,42 L32,46 L48,32 L64,39 L80,26 L96,35 L112,20 L128,30 L144,17 L160,26 L176,13 L192,22 L208,19 L224,31 L240,24 L256,35 L272,28 L288,38 L300,32 L316,39 L316,62 L0,62 Z" fill="url(#c2)"/>
+            <path d="M0,48 L16,42 L32,46 L48,32 L64,39 L80,26 L96,35 L112,20 L128,30 L144,17 L160,26 L176,13 L192,22 L208,19 L224,31 L240,24 L256,35 L272,28 L288,38 L300,32 L316,39" fill="none" stroke="#34d399" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M0,22 L16,19 L32,24 L48,18 L64,21 L80,15 L96,23 L112,17 L128,20 L144,14 L160,22 L176,18 L192,25 L208,19 L224,16 L240,22 L256,18 L272,23 L288,17 L300,21 L316,19" fill="none" stroke="#5aa9ff" stroke-width="1.2" stroke-dasharray="3 2.5" opacity=".8"/>
+          </svg>
+          <div style="display:flex;gap:12px;justify-content:flex-end;margin:-4px 0 2px;font-size:9px;color:#4d5766">
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:2px;background:#34d399;border-radius:1px"></span>吞吐</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:0;border-top:2px dashed #5aa9ff"></span>RTT</span>
+          </div>
+
+          <!-- 分层探针 -->
+          <div class="sec">
+            <div class="sec-hd"><span class="t">探针分层</span><span class="line"></span></div>
+            <div class="row hd" style="grid-template-columns: 1fr 40px 54px 46px"><div>目标</div><div class="r">方式</div><div class="r">RTT</div><div class="r">状态</div></div>
+            <div class="row" style="grid-template-columns: 1fr 40px 54px 46px"><div class="n"><span class="dot" style="background:#6ee7a8"></span>网关</div><div class="r">ARP</div><div class="r">1 ms</div><div class="r ok">可达</div></div>
+            <div class="row" style="grid-template-columns: 1fr 40px 54px 46px"><div class="n"><span class="dot" style="background:#6ee7a8"></span>本地 DNS</div><div class="r">UDP</div><div class="r">4 ms</div><div class="r ok">正常</div></div>
+            <div class="row" style="grid-template-columns: 1fr 40px 54px 46px"><div class="n"><span class="dot" style="background:#6ee7a8"></span>公网 DNS</div><div class="r">UDP</div><div class="r">59 ms</div><div class="r ok">正常</div></div>
+            <div class="row" style="grid-template-columns: 1fr 40px 54px 46px"><div class="n"><span class="dot" style="background:#f0b429"></span>阿里云</div><div class="r">TCP</div><div class="r">63 ms</div><div class="r warn">偏慢</div></div>
+            <div class="row" style="grid-template-columns: 1fr 40px 54px 46px"><div class="n"><span class="dot" style="background:#6ee7a8"></span>腾讯云</div><div class="r">TCP</div><div class="r">72 ms</div><div class="r ok">正常</div></div>
+          </div>
+
+          <!-- 链路质量 2x2 -->
+          <div class="sec">
+            <div class="sec-hd"><span class="t">链路质量</span><span class="line"></span></div>
+            <div class="quad">
+              <div class="q"><div class="k">抖动</div><div class="v mono">8.9 <small>ms</small></div></div>
+              <div class="q"><div class="k">丢包</div><div class="v mono">0 <small>%</small></div></div>
+              <div class="q"><div class="k">TCP 重传</div><div class="v mono">0.52 <small>%</small></div></div>
+              <div class="q"><div class="k">RTT 基线</div><div class="v mono">50 <small>ms</small></div></div>
+            </div>
+          </div>
+
+          <!-- 每网卡 -->
+          <div class="sec">
+            <div class="sec-hd"><span class="t">各网卡速率</span><span class="line"></span></div>
+            <div class="row hd" style="grid-template-columns: 1fr 46px 62px 62px"><div>网卡</div><div class="r">类型</div><div class="r">下行</div><div class="r">上行</div></div>
+            <div class="row" style="grid-template-columns: 1fr 46px 62px 62px"><div class="n">WLAN</div><div class="r">无线</div><div class="r ok">1.24 MB/s</div><div class="r">86 KB/s</div></div>
+            <div class="row" style="grid-template-columns: 1fr 46px 62px 62px"><div class="n" style="color:#6ee7a8">Tailscale</div><div class="r">隧道</div><div class="r">0 B/s</div><div class="r">2.1 KB/s</div></div>
+          </div>
+
+          <!-- 出口链路 -->
+          <div class="sec">
+            <div class="sec-hd"><span class="t">出口判定</span><span class="line"></span></div>
+            <div class="route">
+              <span class="node">本机</span><span class="arrow">→</span>
+              <span class="node">192.168.43.1</span><span class="arrow">→</span>
+              <span class="node">WLAN</span><span class="arrow">→</span>
+              <span class="node">公网</span>
+              <span style="color:#4d5766;font-size:10px;margin-left:4px">未走 TUN · 直连</span>
+            </div>
+          </div>
+
+          <!-- 断线 -->
+          <div class="sec">
+            <div class="sec-hd"><span class="t">断线记录</span><span class="line"></span></div>
+            <div style="font-size:10.5px;color:#6ee7a8">本次运行无断线 · 已运行 01:24:37</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <div class="desc">展开后向下生长，不改变宽度。分区：双轨图 → 探针分层 → 链路质量 → 各网卡 → 出口判定 → 断线。每区一条 1px 分隔线 + 极小号全大写标题。</div>
+  </div>
+
+  <!-- ============ 异常态 ============ -->
+  <div class="item">
+    <div class="tag">③ <b>异常态</b> · 拥塞 / 断线</div>
+    <div class="wrap" style="background:linear-gradient(145deg, rgba(255,123,114,.75), rgba(180,90,255,.15) 42%, rgba(255,160,60,.5))">
+      <div class="glass">
+        <div class="glow" style="width:200px;height:200px;background:#ff6b6b;opacity:.26;top:-110px;right:-70px"></div>
+        <div class="glow g2"></div>
+        <div class="inner">
+          <div class="hd">
+            <div class="brand">NETPULSE</div>
+            <div class="state" style="color:#ff9d97">
+              <svg class="ico" viewBox="0 0 9 9"><circle cx="4.5" cy="4.5" r="3.9" fill="none" stroke="#ff9d97" stroke-width="1.5"/><circle cx="4.5" cy="4.5" r="1.7" fill="#ff9d97"/></svg>
+              拥塞
+            </div>
+          </div>
+          <div class="big">
+            <div class="col"><div class="k">DOWN</div><div class="v mono" style="color:#f1f5f9">212<i>KB/s</i></div></div>
+            <div class="col"><div class="k">UP</div><div class="v dim mono">8<i>KB/s</i></div></div>
+          </div>
+          <svg class="chart" viewBox="0 0 316 52" preserveAspectRatio="none" width="316" height="52">
+            <defs><linearGradient id="c3" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ff7b72" stop-opacity=".30"/><stop offset="100%" stop-color="#ff7b72" stop-opacity="0"/>
+            </linearGradient></defs>
+            <path d="M0,36 L16,30 L32,34 L48,28 L64,32 L80,22 L96,42 L112,15 L128,44 L144,12 L160,40 L176,20 L192,38 L208,26 L224,42 L240,18 L256,36 L272,24 L288,40 L300,28 L316,34 L316,52 L0,52 Z" fill="url(#c3)"/>
+            <path d="M0,36 L16,30 L32,34 L48,28 L64,32 L80,22 L96,42 L112,15 L128,44 L144,12 L160,40 L176,20 L192,38 L208,26 L224,42 L240,18 L256,36 L272,24 L288,40 L300,28 L316,34" fill="none" stroke="#ff7b72" stroke-width="1.6" stroke-linejoin="round"/>
+          </svg>
+          <div style="display:flex;justify-content:space-between;margin-top:12px;border-top:1px solid rgba(255,255,255,.065);padding-top:11px">
+            <div class="fm"><div class="k" style="color:#a86a66">RTT</div><div class="v mono" style="color:#ff9d97">318 ms</div></div>
+            <div class="fm"><div class="k" style="color:#a86a66">抖动</div><div class="v mono" style="color:#ffb3ad">142 ms</div></div>
+            <div class="fm"><div class="k" style="color:#a86a66">丢包</div><div class="v mono" style="color:#ff9d97">23%</div></div>
+            <div class="fm"><div class="k" style="color:#a86a66">出口</div><div class="v">WLAN</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="desc">描边、光晕、图表、状态点全部随健康度染色：正常绿 / 有负载琥珀 / 拥塞橙 / 断线红。配色不用换主题，只换一个色相变量。</div>
+  </div>
+
+</div>
+</body>
+</html>

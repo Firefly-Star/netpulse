@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>NetPulse 界面原型</title>
+<style>
+  @font-face { font-family: 'SUIV'; src: local('Segoe UI Variable Display'); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a1d23;
+    font-family: 'Segoe UI Variable Text', 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft YaHei', sans-serif;
+    padding: 40px;
+    color: #e6edf3;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page-title { font-size: 13px; letter-spacing: .18em; color: #6b7280; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
+  .page-sub { font-size: 12px; color: #4b5563; margin-bottom: 34px; }
+  .grid { display: flex; flex-wrap: wrap; gap: 44px; align-items: flex-start; }
+  .item { display: flex; flex-direction: column; gap: 14px; }
+  .tag { font-size: 11px; color: #6b7280; letter-spacing: .06em; font-weight: 600; }
+  .tag b { color: #9ca3af; font-weight: 600; }
+  .desc { font-size: 11px; color: #4b5563; line-height: 1.65; max-width: 300px; }
+  .mono { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; }
+
+  /* ============ A 极简仪表盘 ============ */
+  .a {
+    width: 300px; background: #0f1216; border-radius: 14px; padding: 18px 18px 14px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.045);
+    position: relative; overflow: hidden;
+  }
+  .a-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .a-brand { font-size: 11px; letter-spacing: .14em; color: #4a5563; font-weight: 600; }
+  .a-pill { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; padding: 4px 10px; border-radius: 20px;
+           background: rgba(63,185,80,.13); color: #46d160; display: flex; align-items: center; gap: 5px; }
+  .a-dot { width: 5px; height: 5px; border-radius: 50%; background: #46d160; box-shadow: 0 0 7px #46d160; }
+  .a-num { display: flex; align-items: baseline; gap: 6px; }
+  .a-num .v { font-size: 40px; font-weight: 250; letter-spacing: -.025em; line-height: 1; color: #f0f4f8; }
+  .a-num .u { font-size: 12px; color: #525d6b; font-weight: 500; }
+  .a-lbl { font-size: 10px; color: #3f4854; letter-spacing: .1em; text-transform: uppercase; font-weight: 600; margin-bottom: 5px; }
+  .a-row2 { margin-top: 16px; }
+  .a-spark { height: 40px; margin: 16px -18px 0; }
+  .a-metrics { display: flex; gap: 0; margin-top: 14px; border-top: 1px solid rgba(255,255,255,.055); padding-top: 12px; }
+  .a-m { flex: 1; }
+  .a-m .k { font-size: 9.5px; color: #3f4854; letter-spacing: .09em; font-weight: 600; margin-bottom: 3px; }
+  .a-m .val { font-size: 15px; color: #c9d4df; font-weight: 450; }
+  .a-foot { display: flex; gap: 6px; margin-top: 14px; }
+  .a-chip { font-size: 10px; color: #5c6674; background: rgba(255,255,255,.035); padding: 3px 8px; border-radius: 5px; }
+
+  /* ============ B 专业网工风 ============ */
+  .b {
+    width: 400px; background: #f7f8fa; border-radius: 8px; color: #23272f;
+    box-shadow: 0 18px 50px rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.09); overflow: hidden;
+  }
+  .b-head { background: #1e2530; color: #fff; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center; }
+  .b-head .t { font-size: 12px; font-weight: 600; letter-spacing: .03em; }
+  .b-head .s { font-size: 10.5px; color: #8b96a5; }
+  .b-big { display: flex; gap: 1px; background: #e2e6ec; }
+  .b-cell { flex: 1; background: #fff; padding: 11px 13px; }
+  .b-cell .k { font-size: 9.5px; color: #7a8494; letter-spacing: .1em; font-weight: 700; margin-bottom: 4px; }
+  .b-cell .v { font-size: 21px; font-weight: 600; letter-spacing: -.02em; color: #171c24; }
+  .b-cell .v small { font-size: 10px; font-weight: 500; color: #8b96a5; margin-left: 2px; }
+  .b-table { padding: 10px 13px 12px; }
+  .b-table .cap { font-size: 9.5px; color: #8b96a5; letter-spacing: .1em; font-weight: 700; margin: 4px 0 6px; }
+  .b-tr { display: grid; grid-template-columns: 1fr 52px 62px 54px; gap: 8px; padding: 4px 0;
+          border-bottom: 1px solid #eaedf1; font-size: 11.5px; align-items: center; }
+  .b-tr.hd { color: #8b96a5; font-size: 9.5px; letter-spacing: .07em; font-weight: 700; border-bottom: 1px solid #d8dee6; }
+  .b-tr .n { color: #3a424f; }
+  .b-tr .r { text-align: right; font-family: 'Cascadia Mono','Consolas',monospace; font-size: 11px; }
+  .ok { color: #1a7f37; } .warn { color: #9a6700; } .bad { color: #cf222e; }
+  .b-tr .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
+
+  /* ============ C 贴纸小挂件 ============ */
+  .c {
+    width: 232px; background: rgba(22,25,31,.82); backdrop-filter: blur(20px); border-radius: 11px;
+    padding: 9px 13px; display: flex; align-items: center; gap: 11px;
+    box-shadow: 0 10px 34px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.08);
+  }
+  .c-bar { width: 3px; height: 30px; border-radius: 2px; background: #46d160; box-shadow: 0 0 10px rgba(70,209,96,.5); }
+  .c-main { flex: 1; }
+  .c-r1 { display: flex; gap: 10px; font-size: 13px; color: #e8eef4; font-weight: 500; }
+  .c-r1 .ar { color: #5c6674; font-size: 10px; margin-right: 2px; }
+  .c-r2 { display: flex; gap: 8px; font-size: 10px; color: #6b7685; margin-top: 3px; }
+  .c-r2 b { color: #9aa5b3; font-weight: 500; }
+
+  /* ============ D 现代玻璃 ============ */
+  .d-wrap { width: 316px; padding: 2px; border-radius: 18px;
+    background: linear-gradient(140deg, rgba(120,160,255,.4), rgba(190,120,255,.22) 40%, rgba(80,220,180,.3));
+    box-shadow: 0 22px 60px rgba(0,0,0,.55); }
+  .d { border-radius: 16px; padding: 17px; position: relative; overflow: hidden;
+       background: linear-gradient(165deg, #171b24 0%, #12151c 55%, #141821 100%); }
+  .d-glow { position: absolute; width: 190px; height: 190px; border-radius: 50%; filter: blur(56px); opacity: .3; pointer-events: none; }
+  .d-g1 { background: #3b82f6; top: -100px; right: -60px; }
+  .d-g2 { background: #10b981; bottom: -120px; left: -70px; }
+  .d-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; position: relative; }
+  .d-t { font-size: 11px; color: #7d8a9c; letter-spacing: .1em; font-weight: 600; }
+  .d-ring { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: #6ee7a8; font-weight: 600; }
+  .d-big { display: flex; gap: 20px; position: relative; }
+  .d-col .k { font-size: 9.5px; color: #626e80; letter-spacing: .1em; font-weight: 700; margin-bottom: 4px; }
+  .d-col .v { font-size: 27px; font-weight: 300; letter-spacing: -.02em; color: #f1f5f9; line-height: 1; }
+  .d-col .v i { font-size: 10px; color: #5b6678; font-style: normal; font-weight: 500; margin-left: 2px; }
+  .d-chart { margin: 15px -17px 0; position: relative; }
+  .d-foot { display: flex; justify-content: space-between; margin-top: 13px; position: relative;
+            border-top: 1px solid rgba(255,255,255,.06); padding-top: 11px; }
+  .d-fm .k { font-size: 9px; color: #55607340; color: #566072; letter-spacing: .1em; font-weight: 700; }
+  .d-fm .v { font-size: 12.5px; color: #b8c4d4; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="page-title">NetPulse · 界面方向原型</div>
+<div class="page-sub">同一份真实数据（WLAN · 192.168.43.147 · 直连 · 网关 192.168.43.1）下的四种排版</div>
+
+<div class="grid">
+
+  <!-- ================= A ================= -->
+  <div class="item">
+    <div class="tag">A · <b>极简仪表盘</b></div>
+    <div class="a">
+      <div class="a-top">
+        <div class="a-brand">NETPULSE</div>
+        <div class="a-pill"><span class="a-dot"></span>正常</div>
+      </div>
+
+      <div class="a-lbl">下行</div>
+      <div class="a-num"><span class="v mono">1.24</span><span class="u">MB/s</span></div>
+
+      <div class="a-row2">
+        <div class="a-lbl">上行</div>
+        <div class="a-num"><span class="v mono" style="font-size:24px;color:#8894a4">86</span><span class="u">KB/s</span></div>
+      </div>
+
+      <svg class="a-spark" viewBox="0 0 300 40" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="ga" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3b82f6" stop-opacity=".3"/>
+            <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="M0,34 L12,30 L24,32 L36,22 L48,26 L60,18 L72,24 L84,14 L96,20 L108,10 L120,16 L132,8 L144,14 L156,12 L168,20 L180,16 L192,24 L204,19 L216,26 L228,22 L240,28 L252,24 L264,30 L276,26 L288,32 L300,29 L300,40 L0,40 Z" fill="url(#ga)"/>
+        <path d="M0,34 L12,30 L24,32 L36,22 L48,26 L60,18 L72,24 L84,14 L96,20 L108,10 L120,16 L132,8 L144,14 L156,12 L168,20 L180,16 L192,24 L204,19 L216,26 L228,22 L240,28 L252,24 L264,30 L276,26 L288,32 L300,29"
+              fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+
+      <div class="a-metrics">
+        <div class="a-m"><div class="k">RTT</div><div class="val mono">55<span style="font-size:10px;color:#525d6b"> ms</span></div></div>
+        <div class="a-m"><div class="k">抖动</div><div class="val mono">8.9<span style="font-size:10px;color:#525d6b"> ms</span></div></div>
+        <div class="a-m"><div class="k">丢包</div><div class="val mono">0<span style="font-size:10px;color:#525d6b">%</span></div></div>
+      </div>
+
+      <div class="a-foot">
+        <div class="a-chip">直连</div>
+        <div class="a-chip">WLAN</div>
+        <div class="a-chip">网关 55 ms</div>
+      </div>
+    </div>
+    <div class="desc">深色、大数字、留白多。只保留速率 / RTT / 抖动 / 丢包四件事，扫一眼就够。</div>
+  </div>
+
+  <!-- ================= B ================= -->
+  <div class="item">
+    <div class="tag">B · <b>专业网工风</b></div>
+    <div class="b">
+      <div class="b-head">
+        <div class="t">NetPulse</div>
+        <div class="s">WLAN · 直连 · 已运行 01:24:37</div>
+      </div>
+      <div class="b-big">
+        <div class="b-cell"><div class="k">DOWNLOAD</div><div class="v mono">1.24<small>MB/s</small></div></div>
+        <div class="b-cell"><div class="k">UPLOAD</div><div class="v mono">86<small>KB/s</small></div></div>
+        <div class="b-cell"><div class="k">RTT</div><div class="v mono">55<small>ms</small></div></div>
+      </div>
+      <div class="b-table">
+        <div class="cap">探针 · 分层定位</div>
+        <div class="b-tr hd"><div>目标</div><div class="r">方式</div><div class="r">RTT</div><div class="r">状态</div></div>
+        <div class="b-tr"><div class="n"><span class="dot" style="background:#1a7f37"></span>网关</div><div class="r">ARP</div><div class="r">1 ms</div><div class="r ok">可达</div></div>
+        <div class="b-tr"><div class="n"><span class="dot" style="background:#1a7f37"></span>本地 DNS</div><div class="r">UDP</div><div class="r">4 ms</div><div class="r ok">正常</div></div>
+        <div class="b-tr"><div class="n"><span class="dot" style="background:#1a7f37"></span>公网 DNS</div><div class="r">UDP</div><div class="r">59 ms</div><div class="r ok">正常</div></div>
+        <div class="b-tr"><div class="n"><span class="dot" style="background:#9a6700"></span>阿里云</div><div class="r">TCP</div><div class="r">63 ms</div><div class="r warn">偏慢</div></div>
+        <div class="b-tr" style="border-bottom:none"><div class="n"><span class="dot" style="background:#1a7f37"></span>腾讯云</div><div class="r">TCP</div><div class="r">72 ms</div><div class="r ok">正常</div></div>
+
+        <div class="cap" style="margin-top:12px">链路质量 · 近 60 秒</div>
+        <div class="b-tr hd"><div>指标</div><div class="r">当前</div><div class="r">基线</div><div class="r">重传</div></div>
+        <div class="b-tr"><div class="n">抖动</div><div class="r">8.9 ms</div><div class="r">50 ms</div><div class="r">0.52%</div></div>
+        <div class="b-tr" style="border-bottom:none"><div class="n">丢包</div><div class="r ok">0%</div><div class="r">—</div><div class="r">断线 0 次</div></div>
+      </div>
+    </div>
+    <div class="desc">浅底表格化，数字用等宽字体对齐。信息密度最高，适合上课时一直盯着看。</div>
+  </div>
+
+  <!-- ================= C ================= -->
+  <div class="item">
+    <div class="tag">C · <b>贴纸小挂件</b></div>
+    <div class="c">
+      <div class="c-bar"></div>
+      <div class="c-main">
+        <div class="c-r1 mono"><span><span class="ar">↓</span>1.24 MB/s</span><span><span class="ar">↑</span>86 KB/s</span></div>
+        <div class="c-r2"><span>RTT <b>55 ms</b></span><span>抖动 <b>9 ms</b></span><span>丢包 <b>0%</b></span></div>
+      </div>
+    </div>
+    <div class="desc">232×48 的半透明小条，几乎不占桌面。点一下才展开成 A 或 B。</div>
+  </div>
+
+  <!-- ================= D ================= -->
+  <div class="item">
+    <div class="tag">D · <b>现代玻璃拟态</b></div>
+    <div class="d-wrap">
+      <div class="d">
+        <div class="d-glow d-g1"></div>
+        <div class="d-glow d-g2"></div>
+        <div class="d-hd">
+          <div class="d-t">NETPULSE</div>
+          <div class="d-ring">
+            <svg width="9" height="9" viewBox="0 0 9 9"><circle cx="4.5" cy="4.5" r="4" fill="none" stroke="#6ee7a8" stroke-width="1.6"/><circle cx="4.5" cy="4.5" r="1.8" fill="#6ee7a8"/></svg>
+            链路正常
+          </div>
+        </div>
+        <div class="d-big">
+          <div class="d-col"><div class="k">DOWN</div><div class="v mono">1.24<i>MB/s</i></div></div>
+          <div class="d-col"><div class="k">UP</div><div class="v mono" style="color:#93a2b5">86<i>KB/s</i></div></div>
+        </div>
+        <svg class="d-chart" viewBox="0 0 316 54" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="gd" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#10b981" stop-opacity=".35"/>
+              <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M0,42 L16,36 L32,40 L48,26 L64,32 L80,20 L96,28 L112,15 L128,24 L144,12 L160,20 L176,9 L192,17 L208,14 L224,25 L240,19 L256,29 L272,22 L288,31 L300,26 L316,32 L316,54 L0,54 Z" fill="url(#gd)"/>
+          <path d="M0,42 L16,36 L32,40 L48,26 L64,32 L80,20 L96,28 L112,15 L128,24 L144,12 L160,20 L176,9 L192,17 L208,14 L224,25 L240,19 L256,29 L272,22 L288,31 L300,26 L316,32"
+                fill="none" stroke="#34d399" stroke-width="1.6" stroke-linejoin="round"/>
+        </svg>
+        <div class="d-foot">
+          <div class="d-fm"><div class="k">RTT</div><div class="v mono">55 ms</div></div>
+          <div class="d-fm"><div class="k">抖动</div><div class="v mono">8.9 ms</div></div>
+          <div class="d-fm"><div class="k">丢包</div><div class="v mono">0%</div></div>
+          <div class="d-fm"><div class="k">出口</div><div class="v">WLAN</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="desc">渐变描边 + 背景光晕 + 半透明分层，视觉最讨喜，但 WinForms 里要手绘才做得出来。</div>
+  </div>
+
+</div>
+</body>
+</html>

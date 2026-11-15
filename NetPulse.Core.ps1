@@ -501,6 +501,8 @@ function Get-NetPulseProxy {
         HasTunnel = $false
         TunIfDesc = ''
         TunRatio  = 0.0
+        ProxyActive = $false
+        RouteMode = 'direct'
     }
 }
 #endregion
@@ -878,6 +880,19 @@ function Update-NetPulse {
     $proxy.TunRatio = if ($wanCount -gt 0) { [math]::Round($tunCount / [double]$wanCount, 2) } else { 0 }
     $tunNames = @($routeDetail | Where-Object { $_.ViaTunnel } | ForEach-Object { $_.IfName } | Select-Object -Unique)
     $proxy.TunIfDesc = ($tunNames -join ',')
+
+    # 代理开着但目标走物理网卡 = 规则模式（分流）；目标全走 TUN = 全局模式。
+    # 这比单看"有没有 TUN 网卡"有用：规则模式下 TUN 网卡存在，但你的目标并不经过它。
+    $proxy.ProxyActive = ($proxy.Mode -ne 'direct')
+    if ($proxy.ProxyActive -and $wanCount -gt 0) {
+        if ($tunCount -eq $wanCount) { $proxy.RouteMode = 'global' }      # 全部走隧道
+        elseif ($tunCount -gt 0)     { $proxy.RouteMode = 'rule' }        # 部分走隧道
+        else                         { $proxy.RouteMode = 'direct-out' }  # 代理在跑但这几个目标直连
+    } elseif ($tunCount -gt 0) {
+        $proxy.RouteMode = 'tun-only'
+    } else {
+        $proxy.RouteMode = 'direct'
+    }
 
     return [pscustomobject]@{
         At            = $now
