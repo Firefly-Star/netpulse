@@ -1,0 +1,9 @@
+﻿# NetPulse 运行产物
+selftest/
+logs/
+*.log
+_pid.txt
+shot-*.png
+
+# 临时诊断脚本
+_[a-z]*.ps1
