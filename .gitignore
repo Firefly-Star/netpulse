@@ -1,9 +1,15 @@
 ﻿# NetPulse 运行产物
-selftest/
+selftest/*.log
 logs/
 *.log
 _pid.txt
 shot-*.png
+boot.log
 
 # 临时诊断脚本
 _[a-z]*.ps1
+
+# 构建产物不入库（单文件 exe 60MB，走 GitHub Release）
+netpulse-cs/bin/
+netpulse-cs/obj/
+NetPulse.exe
